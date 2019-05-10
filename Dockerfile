@@ -1,4 +1,4 @@
-FROM rocker/binder:3.4.3
+FROM rocker/binder:latest
 
 ## Copies your repo files into the Docker Container
 USER root

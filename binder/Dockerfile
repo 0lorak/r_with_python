@@ -1,4 +1,5 @@
 FROM rocker/binder:3.6.0
+RUN R -e "install.packages('markovchain', repos = 'http://cran.us.r-project.org')"
 
 ## Copies your repo files into the Docker Container
 USER root

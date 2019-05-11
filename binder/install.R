@@ -3,11 +3,10 @@
 install.packages("reticulate") # python support in RMarkdown
 install.packages("ggplot2") # for plotting
 install.packages(c("rmarkdown", "caTools", "bitops")) # for knitting
-install.packages("expm") # to be able to install markovchain package
-install.packages("igraph") # to be able to install markovchain package
+#install.packages("expm") # to be able to install markovchain package
+#install.packages("igraph") # to be able to install markovchain package
 install.packages("matlab") # to be able to install markovchain package
-install.packages("markovchain") # to be able to work with Markov Chains
-install.packages("gsl") # to be able to work with Markov Chains
+install.packages('markovchain') # to be able to work with Markov Chains
 
 ### install bioconductor packages
 # install.packages("BiocManager")

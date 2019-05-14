@@ -160,7 +160,9 @@ for(i in 1:N)
   #v[PosRetSt]=1
 
   #Estimaciones parciales del eigenvalor dominante de A 
-  PFvalue[i] = as.numeric(A[PosRetSt,]%*%v)
+  #PFvalue[i] = as.numeric(A[PosRetSt,]%*%v)
+  PFvalue[i] = maxA*exp(-theta$root)
+
 }#fin for i in 1:N
 
 #Estimación del eigenvalor dominante de A 

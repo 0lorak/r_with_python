@@ -1,8 +1,8 @@
 library("markovchain")
 
 A = matrix(data = c(10, 8, 2,
-                                0.3, 4, 1,
-                                2, 15, 5), byrow = T, nrow = 3)
+                    0.3, 4, 1,
+                    2, 15, 5), byrow = T, nrow = 3)
 
 eigen(A)
 ###########################################################
@@ -19,7 +19,7 @@ transAux = rbind(transAux,c(rep(0,tam),1))
 States = c(paste("s",1:tam,sep=""),"ext")
 
 mcAux <- new("markovchain", states = States,
-                        transitionMatrix = transAux, name = "Aux")
+             transitionMatrix = transAux, name = "Aux")
 ###########################################################
 
 #Simulación Monte Carlo

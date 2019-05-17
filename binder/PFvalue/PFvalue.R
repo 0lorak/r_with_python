@@ -206,7 +206,7 @@ LH_CE <- function(x,z,MC,AUX,IS,alpha)
   {
     LHRatio = prod(PTrans/QTrans)
     output <- unlist(lapply(n2,function(x) alpha*(x*LHRatio)/(n1*LHRatio)))
-              + (1-alpha)*as.vector(AUX[x,]))
+              + (1-alpha)*AUX[x,]
   } else output <-rep(0,tam+1)
   output
 }

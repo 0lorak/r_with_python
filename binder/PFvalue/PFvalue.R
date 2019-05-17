@@ -168,3 +168,53 @@ for(i in 1:N)
 #Estimación del eigenvalor dominante de A 
 PFvalue[N]
 ############################################################################
+
+             
+LH_CE <- function(x,z,MC,AUX,IS,alpha)
+{
+  aux=which(MC==z)
+  SimAux=MC[1:aux[1]] #truncar la cadena hasta la primer regreso a z
+  aux=which(SimAux==x)
+  if(length(aux) == 0) n1=0 else 
+    {
+     SimAux1=SimAux[aux] #visitas al estado x
+     n1=length(SimAux1)
+    }
+  
+  
+  SimAux1 = SimAux1[aux+1]
+  SimAux1 = SimAux1[-which(is.na(SimAux1)==T)]
+  if(length(SimAux1)==0) n2=rep(list(0),tam+1) else
+  {
+   SimAux2=lapply(States,function(x) which(SimAux1==x)) #visitas a cada estado
+   n2=lapply(SimAux2,function(x) length(x))
+  }
+  
+  aux=c(z,SimAux)
+  aux1 = which(aux==x)
+  if(length(aux1)==0) MC1=NULL else 
+  {
+    aux = aux[1:(aux1[2]-1)]
+    MC1 = SimAux[1:which(SimAux==x)[1]]
+    PTrans = unlist(mapply(function(x,y) AUX[x,y],aux,MC1))
+    QTrans = unlist(mapply(function(x,y) IS[x,y],aux,MC1))
+    names(PTrans) = NULL
+    names(QTrans) = NULL
+  }
+  
+  if(length(MC1) > 0)
+  {
+    LHRatio = prod(PTrans/QTrans)
+    output <- unlist(lapply(n2,function(x) alpha*(x*LHRatio)/(n1*LHRatio)))
+              + (1-alpha)*as.vector(AUX[x,]))
+  } else output <-rep(0,tam+1)
+  output
+}
+
+
+v = rep(1,tam) #vector inicial
+alpha = 0.4
+mcIS = f(v) #Cadena de Markov con matriz de transisión Q_v
+Sim <- rmarkovchain(n = mcSize, object = mcIS, t0 = z)
+Out <- lapply(States, function(x) LH_CE(x,z,Sim,mcAux,mcIS,alpha))
+             

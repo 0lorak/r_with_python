@@ -169,82 +169,33 @@ for(i in 1:N)
 PFvalue[N]
 ############################################################################
 
-             
-LH_CE <- function(x,z,MC,AUX,IS,alpha)
-{
-  aux=which(MC==z)
-  SimAux=MC[1:aux[1]] #truncar la cadena hasta la primer regreso a z
-  aux=which(SimAux==x)
-  if(length(aux) == 0) n1=0 else 
-    {
-     SimAux1=SimAux[aux] #visitas al estado x
-     n1=length(SimAux1)
-    }
-  
-  
-  SimAux1 = SimAux1[aux+1]
-  SimAux1 = SimAux1[-which(is.na(SimAux1)==T)]
-  if(length(SimAux1)==0) n2=rep(list(0),tam+1) else
-  {
-   SimAux2=lapply(States,function(x) which(SimAux1==x)) #visitas a cada estado
-   n2=lapply(SimAux2,function(x) length(x))
-  }
-  
-  aux=c(z,SimAux)
-  aux1 = which(aux==x)
-  if(length(aux1)==0) MC1=NULL else 
-  {
-    aux = aux[1:(aux1[2]-1)]
-    MC1 = SimAux[1:which(SimAux==x)[1]]
-    PTrans = unlist(mapply(function(x,y) AUX[x,y],aux,MC1))
-    QTrans = unlist(mapply(function(x,y) IS[x,y],aux,MC1))
-    names(PTrans) = NULL
-    names(QTrans) = NULL
-  }
-  
-  if(length(MC1) > 0)
-  {
-    LHRatio = prod(PTrans/QTrans)
-    output <- unlist(lapply(n2,function(x) alpha*(x*LHRatio)/(n1*LHRatio)))
-              + (1-alpha)*AUX[x,]
-  } else output <-rep(0,tam+1)
-  output
-}
-
-
-v = rep(1,tam) #vector inicial
-alpha = 0.4
-mcIS = f(v) #Cadena de Markov con matriz de transisión Q_v
-Sim <- rmarkovchain(n = mcSize, object = mcIS, t0 = z)
-Out <- lapply(States, function(x) LH_CE(x,z,Sim,mcAux,mcIS,alpha))
-             
-
-              
+#Cross-Entropy             
 LH_CE <- function(x,z,MC,AUX,IS)
 {
   aux=which(MC==z)
   SimAux=MC[1:aux[1]] #truncar la cadena hasta la primer regreso a z
   aux=which(SimAux==x)
   if(length(aux) == 0) n1=0 else 
-    {
-     SimAux1=SimAux[aux] #visitas al estado x
-     n1=length(SimAux1)
-    }
-  
-  SimAux1 = SimAux1[aux+1]
-  SimAux1 = SimAux1[-which(is.na(SimAux1)==T)]
-  if(length(SimAux1)==0) n2=rep(list(0),tam+1) else
   {
-   SimAux2=lapply(States,function(x) which(SimAux1==x)) #visitas a cada estado
-   n2=lapply(SimAux2,function(x) length(x))
+    SimAux1=SimAux[aux] #visitas al estado x
+    n1=length(SimAux1)
   }
   
-  aux=c(z,SimAux)
-  aux1 = which(aux==x)
+  SimAux1 = SimAux[aux+1]
+  rem = which(is.na(SimAux1)==T)
+  if(length(rem) > 0) SimAux1 = SimAux1[-rem]
+  if(length(SimAux1)==0) n2=rep(list(0),tam+1) else
+  {
+    SimAux2=lapply(States,function(x) which(SimAux1==x)) #visitas a cada estado
+    n2=lapply(SimAux2,function(x) length(x))
+  }
+  
+  aux = c(z,SimAux)
+  aux1 = which(aux==z)
+  aux = aux[1:(aux1[2]-1)]
   if(length(aux1)==0) MC1=NULL else 
   {
-    aux = aux[1:(aux1[2]-1)]
-    MC1 = SimAux[1:which(SimAux==x)[1]]
+    MC1 = SimAux
     PTrans = unlist(mapply(function(x,y) AUX[x,y],aux,MC1))
     QTrans = unlist(mapply(function(x,y) IS[x,y],aux,MC1))
     names(PTrans) = NULL
@@ -254,20 +205,69 @@ LH_CE <- function(x,z,MC,AUX,IS)
   if(length(MC1) > 0)
   {
     LHRatio = prod(PTrans/QTrans)
-    out1 <- unlist(lapply(n2,function(x) x*LHRatio))
-    out2 <- n1*LHRatio
-    output <- list(out1,out2)
-  } else output <- rep(list(0),tam+1)
+    out1 <- n1*LHRatio
+    out2 <- unlist(lapply(n2,function(x) x*LHRatio))
+    output <- list("Est1" = out1, "Est2" = out2)
+  } else output <-list("Est1" = 0,"Est2" = rep(0,tam+1))
   output
 }
 
-
+N = 1e3
+M = N/10
+mcSize = 500 #tamaño de muestra -cadenas de Markov-
+z = States[1] #seleccionar el estado retorno
 v = rep(1,tam) #vector inicial
-alpha = 0.4
-
 mcIS = f(v) #Cadena de Markov con matriz de transisión Q_v
-Sim <- rmarkovchain(n = mcSize, object = mcIS, t0 = z)
-Out <- lapply(States, function(x) LH_CE(x,z,Sim,mcAux,mcIS))
-             
-mcIS = matrix(data = unlist(Out), byrow = T, nrow = 4)
+alpha = 0.4
+Est1 = rep(list(0),tam+1)
+Est2 = rep(list(c(0,0,0,0)),tam+1)
 
+lst3 = list("tau"=0,"LHRatio"=0)
+lst2 = rep(list(lst3),tam)
+names(lst2) = States[-(tam+1)]
+lst = rep(list(lst2),N)
+
+#Cross-Entropy. Iteraciones para aproximar la matriz de transición óptima
+for(i in 1:M)
+{ 
+  z0 = sample(States[-(tam+1)],1)
+  Sim <- rmarkovchain(n = mcSize, object = mcIS, t0 = z0)
+  Out <- lapply(States, function(x) LH_CE(x,z0,Sim,mcAux,mcIS))
+  
+  a = lapply(Out,function(x) x$Est1)
+  b = lapply(Out,function(x) x$Est2)
+  Est1 = as.list(mapply(function(x,y) x+y,Est1,a))
+  Est2 = mapply(function(x,y) x+y,Est2,b)
+  Est2 = lapply(seq_len(ncol(Est2)), function(i) Est2[,i])
+  mcISAux = lapply(seq_len(nrow(mcIS[,])), function(i) mcIS[i,])
+  transIS = alpha*t(mapply(function(x,y,z) if(y > 0 && x > 0) x/y else z,Est2,Est1,mcISAux)) + (1-alpha)*mcIS[,] 
+  mcIS <- new("markovchain", states = States,
+              transitionMatrix = transIS, name = "IS")
+}
+
+#Iteraciones para estimar el eigenvalor dominante de la matriz A                           
+for(i in 1:N)
+{
+  Sim <- lapply(States[-(tam+1)],function(x) rmarkovchain(n = mcSize, object = mcIS, t0 = x))
+  Out <- mapply(function(x1,x2) LH(x1,z,x2,mcAux,mcIS),States[-(tam+1)],Sim)
+    
+  #Aplicar la función por columnas a la matriz Out
+  lst[[i]] = apply(Out,2,function(x) x)
+}#fin for i in 1:N
+
+  PosRetSt = which(States==z)
+  tau = lapply(States[-(tam+1)],function(x) g(x,lst,"tau"))
+  LHRatio = lapply(States[-(tam+1)],function(x) g(x,lst,"LHRatio"))
+  
+  #Solución (x) de la ecuación sum(LHRatio_k*exp(tau_k*x)) = M iniciando en el estado retorno z
+  y = function(x){sum(LHRatio[[PosRetSt]]*exp(tau[[PosRetSt]]*x)) - N}
+  b = unlist(lapply(0:10,function(x) y(x))) #Evalúa la función y en [0,10]
+  b = which(b>0)[1] #Detecta el 1er valor x en [0,10] tal que y(x)>0
+  theta = uniroot(y, interval = c(0, b))
+  
+  #Estimaciones parciales del eigenvalor dominante de A 
+  PFvalue = maxA*exp(-theta$root)
+  
+#Estimación del eigenvalor dominante de A 
+PFvalue
+############################################################################

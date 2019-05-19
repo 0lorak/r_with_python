@@ -1,5 +1,8 @@
 library("markovchain")
 
+#Matriz de interés A para determinar su eigenvalor dominante (Perron-Frobenius).
+#Cambiarla según las necesidades.
+
 A = matrix(data = c(10, 8, 2,
                     0.3, 4, 1,
                     2, 15, 5), byrow = T, nrow = 3)
@@ -79,8 +82,7 @@ if(uS2>0) REs2 <- sqrt(varS2)/uS2 else REs3<- NA
 if(uS3>0) REs3 <- sqrt(varS3)/uS3 else REs3<- NA 
 ###########################################################
 
-
-#Simulación Monte Carlo vía IS adaptado
+#Definición de varias funciones
 
 f <- function(u)
 {
@@ -115,12 +117,58 @@ LH <- function(x,z,MC,AUX,IS)
   output
 }
 
+#Cross-Entropy             
+LH_CE <- function(x,z,MC,AUX,IS)
+{
+  aux=which(MC==z)
+  SimAux=MC[1:aux[1]] #truncar la cadena hasta la primer regreso a z
+  aux=which(SimAux==x)
+  if(length(aux) == 0) n1=0 else 
+  {
+    SimAux1=SimAux[aux] #visitas al estado x
+    n1=length(SimAux1)
+  }
+  
+  SimAux1 = SimAux[aux+1]
+  rem = which(is.na(SimAux1)==T)
+  if(length(rem) > 0) SimAux1 = SimAux1[-rem]
+  if(length(SimAux1)==0) n2=rep(list(0),tam+1) else
+  {
+    SimAux2=lapply(States,function(x) which(SimAux1==x)) #visitas a cada estado
+    n2=lapply(SimAux2,function(x) length(x))
+  }
+  
+  aux = c(z,SimAux)
+  aux1 = which(aux==z)
+  aux = aux[1:(aux1[2]-1)]
+  if(length(aux1)==0) MC1=NULL else 
+  {
+    MC1 = SimAux
+    PTrans = unlist(mapply(function(x,y) AUX[x,y],aux,MC1))
+    QTrans = unlist(mapply(function(x,y) IS[x,y],aux,MC1))
+    names(PTrans) = NULL
+    names(QTrans) = NULL
+  }
+  
+  if(length(MC1) > 0)
+  {
+    LHRatio = prod(PTrans/QTrans)
+    out1 <- n1*LHRatio
+    out2 <- unlist(lapply(n2,function(x) x*LHRatio))
+    output <- list("Est1" = out1, "Est2" = out2)
+  } else output <-list("Est1" = 0,"Est2" = rep(0,tam+1))
+  output
+}
+
 g <- function(st,List,txt)
 {  
   if(txt == "tau") res = unlist(lapply(List,function(x) x[[st]]$tau))
   if(txt == "LHRatio") res = unlist(lapply(List,function(x) x[[st]]$LHRatio))
   res
 }
+#######################################################################################
+
+#Simulación Monte Carlo vía IS adaptado de acuerdo al algoritmo de Desai, Glynn (2001).
 
 N = 1e2
 M = N/10
@@ -169,50 +217,7 @@ for(i in 1:N)
 PFvalue[N]
 ############################################################################
 
-
-#Cross-Entropy             
-LH_CE <- function(x,z,MC,AUX,IS)
-{
-  aux=which(MC==z)
-  SimAux=MC[1:aux[1]] #truncar la cadena hasta la primer regreso a z
-  aux=which(SimAux==x)
-  if(length(aux) == 0) n1=0 else 
-  {
-    SimAux1=SimAux[aux] #visitas al estado x
-    n1=length(SimAux1)
-  }
-  
-  SimAux1 = SimAux[aux+1]
-  rem = which(is.na(SimAux1)==T)
-  if(length(rem) > 0) SimAux1 = SimAux1[-rem]
-  if(length(SimAux1)==0) n2=rep(list(0),tam+1) else
-  {
-    SimAux2=lapply(States,function(x) which(SimAux1==x)) #visitas a cada estado
-    n2=lapply(SimAux2,function(x) length(x))
-  }
-  
-  aux = c(z,SimAux)
-  aux1 = which(aux==z)
-  aux = aux[1:(aux1[2]-1)]
-  if(length(aux1)==0) MC1=NULL else 
-  {
-    MC1 = SimAux
-    PTrans = unlist(mapply(function(x,y) AUX[x,y],aux,MC1))
-    QTrans = unlist(mapply(function(x,y) IS[x,y],aux,MC1))
-    names(PTrans) = NULL
-    names(QTrans) = NULL
-  }
-  
-  if(length(MC1) > 0)
-  {
-    LHRatio = prod(PTrans/QTrans)
-    out1 <- n1*LHRatio
-    out2 <- unlist(lapply(n2,function(x) x*LHRatio))
-    output <- list("Est1" = out1, "Est2" = out2)
-  } else output <-list("Est1" = 0,"Est2" = rep(0,tam+1))
-  output
-}
-
+#Simulación Monte Carlo vía IS y Cross-Entropy
 M = 1e4
 N = M/10
 mcSize = 500 #tamaño de muestra -cadenas de Markov-

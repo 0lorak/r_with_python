@@ -169,6 +169,7 @@ for(i in 1:N)
 PFvalue[N]
 ############################################################################
 
+
 #Cross-Entropy             
 LH_CE <- function(x,z,MC,AUX,IS)
 {
@@ -212,13 +213,22 @@ LH_CE <- function(x,z,MC,AUX,IS)
   output
 }
 
-N = 1e3
-M = N/10
+M = 1e4
+N = M/10
 mcSize = 500 #tamaño de muestra -cadenas de Markov-
 z = States[1] #seleccionar el estado retorno
-v = rep(1,tam) #vector inicial
-mcIS = f(v) #Cadena de Markov con matriz de transisión Q_v
-alpha = 0.4
+
+#v = rep(1,tam) #vector inicial
+#mcIS = f(v) #Cadena de Markov con matriz de transisión Q_v
+
+#Matriz de transición inicial para IS
+transIS <- matrix(data = rep(1/tam,tam*tam), byrow = T, nrow = 3)
+transIS <- cbind(transIS,rep(0,tam))
+transIS <- rbind(transIS,c(rep(0,tam),1))
+mcIS <- new("markovchain", states = States,
+                      transitionMatrix = transIS, name = "IS")
+
+alpha = 0.6
 Est1 = rep(list(0),tam+1)
 Est2 = rep(list(c(0,0,0,0)),tam+1)
 
@@ -240,7 +250,7 @@ for(i in 1:M)
   Est2 = mapply(function(x,y) x+y,Est2,b)
   Est2 = lapply(seq_len(ncol(Est2)), function(i) Est2[,i])
   mcISAux = lapply(seq_len(nrow(mcIS[,])), function(i) mcIS[i,])
-  transIS = alpha*t(mapply(function(x,y,z) if(y > 0 && x > 0) x/y else z,Est2,Est1,mcISAux)) + (1-alpha)*mcIS[,] 
+  transIS = alpha*t(mapply(function(x,y,z) if(y > 0 && sum(x/y) == 1) x/y else z,Est2,Est1,mcISAux)) + (1-alpha)*mcIS[,] 
   mcIS <- new("markovchain", states = States,
               transitionMatrix = transIS, name = "IS")
 }

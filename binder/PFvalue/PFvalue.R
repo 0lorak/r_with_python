@@ -217,7 +217,8 @@ for(i in 1:N)
 PFvalue[N]
 ############################################################################
 
-#Simulación Monte Carlo vía IS y Cross-Entropy
+#Simulación Monte Carlo vía IS con Cross-Entropy
+             
 M = 1e4
 N = M/10
 mcSize = 500 #tamaño de muestra -cadenas de Markov-
@@ -274,7 +275,7 @@ for(i in 1:N)
   tau = lapply(States[-(tam+1)],function(x) g(x,lst,"tau"))
   LHRatio = lapply(States[-(tam+1)],function(x) g(x,lst,"LHRatio"))
   
-  #Solución (x) de la ecuación sum(LHRatio_k*exp(tau_k*x)) = M iniciando en el estado retorno z
+  #Solución (x) de la ecuación sum(LHRatio_k*exp(tau_k*x)) = N iniciando en el estado retorno z
   y = function(x){sum(LHRatio[[PosRetSt]]*exp(tau[[PosRetSt]]*x)) - N}
   b = unlist(lapply(0:10,function(x) y(x))) #Evalúa la función y en [0,10]
   b = which(b>0)[1] #Detecta el 1er valor x en [0,10] tal que y(x)>0

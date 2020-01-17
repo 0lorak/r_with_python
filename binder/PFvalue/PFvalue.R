@@ -121,7 +121,7 @@ LH <- function(x,z,MC,AUX,IS)
 LH_CE <- function(x,z,MC,AUX,IS)
 {
   aux=which(MC==z)
-  SimAux=MC[1:aux[1]] #truncar la cadena hasta la primer regreso a z
+  SimAux=MC[1:aux[1]] #truncar la cadena hasta el primer regreso a z
   aux=which(SimAux==x)
   if(length(aux) == 0) n1=0 else 
   {

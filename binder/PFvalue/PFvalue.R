@@ -174,7 +174,7 @@ g <- function(st,List,txt)
 #Simulación Monte Carlo vía IS adaptado de acuerdo al algoritmo de Desai, Glynn (2001).
 
 N = 1e2
-M = N/10
+M = N/1e1
 mcSize = 500 #tamaño de muestra -cadenas de Markov-
 z = sample(States[-(tam+1)],1) #seleccionar el estado retorno
 v = rep(1,tam) #vector inicial
@@ -224,7 +224,7 @@ PFvalue[N]
 #Simulación Monte Carlo vía IS con Cross-Entropy
              
 N = 1e2
-M = N/1e0
+M = N/1e1
 mcSize = 500 #tamaño de muestra -cadenas de Markov-
 z0 = sample(States[-(tam+1)],1)
 
@@ -235,8 +235,6 @@ transIS <- rbind(transIS,c(rep(0,tam),1))
 mcIS <- new("markovchain", states = States,
                       transitionMatrix = transIS, name = "IS")
 
-#Est1 = rep(list(0),tam+1)
-#Est2 = rep(list(c(0,0,0,0)),tam+1)
 Est1 = rep(0,tam+1)
 Est2 = rep(0,(tam+1)^2)
 PFvalue = rep(0,M)

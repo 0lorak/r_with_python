@@ -224,7 +224,7 @@ PFvalue[N]
 #Simulación Monte Carlo vía IS con Cross-Entropy
              
 N = 1e2
-M = N/1e1
+M = N*1e1
 mcSize = 500 #tamaño de muestra -cadenas de Markov-
 z0 = sample(States[-(tam+1)],1)
 
@@ -237,7 +237,7 @@ mcIS <- new("markovchain", states = States,
 
 Est1 = rep(0,tam+1)
 Est2 = rep(0,(tam+1)^2)
-PFvalue = rep(0,M)
+PFvalue = rep(0,N)
 
 lst3 = list("tau"=0,"LHRatio"=0)
 lst2 = rep(list(lst3),tam)
@@ -246,18 +246,18 @@ lst = rep(list(lst2),N)
 
 #Cross-Entropy. Iteraciones para aproximar la matriz de transición óptima
 
-for(k in 1:M)
+for(i in 1:N)
 {  
  mcISAux = mcIS[]
  
-for(i in 1:N)
+for(k in 1:M)
 {
   Sim <- lapply(States,function(x) rmarkovchain(n = mcSize, object = mcIS, t0 = x))
 
   #Estimaciones parciales del eigenvalor dominante de A
   Out <- mapply(function(x1,x2) LH(x1,z0,x2,mcAux,mcIS),States[-(tam+1)],Sim[-(tam+1)])
   #Aplicar la función por columnas a la matriz Out
-  lst[[i]] = apply(Out,2,function(x) x)
+  lst[[k]] = apply(Out,2,function(x) x)
 
   #Cross-Entropy
   OutCE <- lapply(States, function(z) mapply(function(x1,x2) LH_CE(x1,z,x2,mcAux,mcIS),States,Sim))
@@ -266,20 +266,20 @@ for(i in 1:N)
 
   Est1 = Est1 + a
   Est2 = Est2 + b
-}#fin for i in 1:N
+}#fin for k in 1:M
 
   PosRetSt = which(States==z0)
   tau = lapply(States[-(tam+1)],function(x) g(x,lst,"tau"))
   LHRatio = lapply(States[-(tam+1)],function(x) g(x,lst,"LHRatio"))
  
-  #Solución (x) de la ecuación sum(LHRatio_k*exp(tau_k*x)) = N iniciando en el estado retorno z
-  y = function(x){sum(LHRatio[[PosRetSt]]*exp(tau[[PosRetSt]]*x)) - N}
+  #Solución (x) de la ecuación sum(LHRatio_k*exp(tau_k*x)) = M iniciando en el estado retorno z
+  y = function(x){sum(LHRatio[[PosRetSt]]*exp(tau[[PosRetSt]]*x)) - M}
   b = unlist(lapply(0:10,function(x) y(x))) #Evalúa la función y en [0,10]
   b = which(b>0)[1] #Detecta el 1er valor x en [0,10] tal que y(x)>0
   theta = uniroot(y, interval = c(0, b))
  
   #Estimaciones parciales del eigenvalor dominante de A
-  PFvalue[k] = maxA*exp(-theta$root)
+  PFvalue[i] = maxA*exp(-theta$root)
 
   #Nueva matriz de transición vía Cross-Entropy
   M1 = as.list(Est1)
@@ -294,8 +294,8 @@ for(i in 1:N)
  
   mcIS <- new("markovchain", states = States,
             transitionMatrix = transIS, name = "IS")
-}
+}#fin for i in 1:N
 
 #Estimación del eigenvalor dominante de A
-PFvalue[M]             
+PFvalue[N]             
 ############################################################################

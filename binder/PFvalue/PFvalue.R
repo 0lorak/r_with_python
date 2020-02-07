@@ -242,7 +242,7 @@ PFvalue = rep(0,N)
 lst3 = list("tau"=0,"LHRatio"=0)
 lst2 = rep(list(lst3),tam)
 names(lst2) = States[-(tam+1)]
-lst = rep(list(lst2),N)
+lst = rep(list(lst2),M)
 
 #Cross-Entropy. Iteraciones para aproximar la matriz de transición óptima
 

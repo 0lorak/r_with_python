@@ -285,8 +285,9 @@ for(k in 1:M)
   #M1 = as.list(Est1)
   M1 = matrix(rep(Est1,(tam+1)),nrow=(tam+1),byrow=T)
   M2 = matrix(Est2,nrow=(tam+1),ncol=(tam+1),byrow=T)
-  transIS = M1+M2
-  transIS = transIS/t(transIS)
+  Aux = M1+M2
+  Aux = Aux/t(Aux)
+  transIS = mcAux[]*Aux                  
   transIS[(tam+1),] = rep(0,(tam+1))
   transIS[,(tam+1)] = rep(0,(tam+1))
   diag(transIS) = diag(mcAux[])

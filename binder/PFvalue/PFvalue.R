@@ -248,7 +248,7 @@ lst = rep(list(lst2),M)
 
 for(i in 1:N)
 {  
- mcISAux = mcIS[]
+ #mcISAux = mcIS[]
  
 for(k in 1:M)
 {
@@ -282,16 +282,22 @@ for(k in 1:M)
   PFvalue[i] = maxA*exp(-theta$root)
 
   #Nueva matriz de transición vía Cross-Entropy
-  M1 = as.list(Est1)
+  #M1 = as.list(Est1)
+  M1 = matrix(rep(Est1,(tam+1)),nrow=(tam+1),byrow=T)
   M2 = matrix(Est2,nrow=(tam+1),ncol=(tam+1),byrow=T)
-  M2 = apply(M2,1, function(x) list(x))
-  transIS = t(mapply(function(x,y) if(y > 0) x[[1]]/y else x[[1]]/1,M2,M1))
+  transIS = M1+M2
+  transIS = transIS/t(transIS)
+  transIS[(tam+1),] = rep(0,(tam+1))
+  transIS[,(tam+1)] = rep(0,(tam+1))
+  diag(transIS) = diag(mcAux[])
+  #M2 = apply(M2,1, function(x) list(x))
+  #transIS = t(mapply(function(x,y) if(y > 0) x[[1]]/y else x[[1]]/1,M2,M1))
   transIS = t(apply(transIS,1, function(x) x/sum(x)))
 
   #Transiciones con ceros se ajustan a los valores de la matriz de transición anterior.
-  recover = which(is.na(transIS)==T)
-  transIS[recover]=mcISAux[recover]
- 
+  #recover = which(is.na(transIS)==T)
+  #transIS[recover]=mcISAux[recover]
+                   
   mcIS <- new("markovchain", states = States,
             transitionMatrix = transIS, name = "IS")
 }#fin for i in 1:N

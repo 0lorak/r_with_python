@@ -292,5 +292,6 @@ for(k in 1:M)
 }#fin for i in 1:N
 
 #Estimación del eigenvalor dominante de A
-PFvalue[N]             
+PFvalue[N]  
+mean(PFvalue)
 ############################################################################
